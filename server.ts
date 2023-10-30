@@ -15,9 +15,14 @@ const io = new Server(httpServer, {
 });
 
 const servicos: any[] = [];
-const nsp = io.of("/HAC");
+const nsp = io.of("/HAC/nutricao");
+const nsp_t = io.of("/HAC/teste");
 
 app.use(express.static("public"));
+
+nsp_t.on("connection", (socket) => {
+  console.log("Cliente conectado ao namespace HAC:", socket.id);
+});
 
 nsp.on("connection", (socket) => {
   console.log("Cliente conectado ao namespace HAC:", socket.id);
@@ -27,7 +32,6 @@ nsp.on("connection", (socket) => {
   socket.on("receber serviço", (data) => {
     console.log("Serviço recebido:", data);
     servicos.push(data);
-
     nsp.emit("novo serviço", data);
   });
 
