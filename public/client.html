@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebSocket Client</title>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+      }
+
+      #app {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: #fff;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+      }
+
+      #services {
+        list-style-type: none;
+        padding: 0;
+      }
+
+      #services li {
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      #services li:last-child {
+        border-bottom: none;
+      }
+
+      button {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h2>WebSocket Client</h2>
+      <ul id="services"></ul>
+      <ul id="messages"></ul>
+      <input type="text" id="messageInput" placeholder="Nome do serviço" />
+      <button onclick="sendMessage()">Enviar Serviço</button>
+    </div>
+
+    <script>
+      const socket = io("http://localhost:5000/HAC");
+
+      socket.on("connect", () => {
+        console.log("Conectado ao servidor!");
+      });
+
+      socket.on("novo serviço", (data) => {
+        displayService(data);
+      });
+
+      socket.on("serviço aceito", (data) => {
+        const serviceItem = document.getElementById(data.nome);
+        if (serviceItem) {
+          serviceItem.remove();
+        }
+      });
+
+      function displayService(data) {
+        const servicesList = document.getElementById("services");
+        const listItem = document.createElement("li");
+        listItem.id = data.nome;
+        listItem.textContent = `Serviço: ${data.nome}, Criado em: ${data.criado}`;
+        const acceptButton = document.createElement("button");
+        acceptButton.textContent = "Aceitar";
+        acceptButton.onclick = () => acceptService(data.nome);
+        listItem.appendChild(acceptButton);
+        servicesList.appendChild(listItem);
+      }
+
+      function acceptService(nome) {
+        socket.emit("aceitar serviço", nome);
+      }
+
+      function sendMessage() {
+        const input = document.getElementById("messageInput");
+        const data = {
+          nome: input.value,
+          criado: new Date().toISOString(),
+        };
+        socket.emit("receber serviço", data);
+        input.value = "";
+      }
+    </script>
+  </body>
+</html>
