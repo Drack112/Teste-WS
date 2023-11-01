@@ -14,35 +14,46 @@ const io = new Server(httpServer, {
   },
 });
 
-const servicos: any[] = [];
-const nsp = io.of("/HAC/nutricao");
-const nsp_t = io.of("/HAC/teste");
-
 app.use(express.static("public"));
 
-nsp_t.on("connection", (socket) => {
-  console.log("Cliente conectado ao namespace HAC:", socket.id);
-});
+let servicos: {
+  id: number;
+  patient: string;
+  category: string;
+  createdAt: Date;
+  accepted: boolean;
+}[] = [];
 
-nsp.on("connection", (socket) => {
-  console.log("Cliente conectado ao namespace HAC:", socket.id);
+function createNamespace(namespaceName: string) {
+  const nsp = io.of(`/${namespaceName}`);
 
-  socket.emit("lista de serviços", servicos);
+  nsp.on("connection", (socket) => {
+    console.log(`Cliente conectado ao namespace ${namespaceName}:`, socket.id);
 
-  socket.on("receber serviço", (data) => {
-    console.log("Serviço recebido:", data);
-    servicos.push(data);
-    nsp.emit("novo serviço", data);
+    socket.emit("lista de serviços", servicos);
+
+    socket.on("receber serviço", (data) => {
+      if (data.id && data.patient && data.category && data.createdAt) {
+        console.log("Serviço recebido:", data);
+        servicos.push(data);
+        nsp.emit("novo serviço", data);
+      } else {
+        console.log("Estrutura de dados do serviço inválida:", data);
+      }
+    });
+    socket.on("aceitar serviço", (serviceId) => {
+      const index = servicos.findIndex((s) => s.id === serviceId);
+      if (index !== -1) {
+        const [servicoAceito] = servicos.splice(index, 1);
+        console.log("Serviço aceito", servicoAceito);
+        nsp.emit("serviço aceito", servicoAceito);
+      }
+    });
   });
+}
 
-  socket.on("aceitar serviço", (nome) => {
-    const index = servicos.findIndex((s) => s.nome === nome);
-    if (index !== -1) {
-      const [servicoAceito] = servicos.splice(index, 1);
-      nsp.emit("serviço aceito", servicoAceito);
-    }
-  });
-});
+createNamespace("HAC");
+createNamespace("GOHEALTH");
 
 httpServer.listen(5000, () => {
   console.log("Servidor rodando na porta 5000.");
