@@ -14,31 +14,23 @@ export const insertService = (
     data: Partial<SCService>,
     callback: (err: Error | null) => void
 ) => {
-    const {
-        allocatedAgent,
-        description,
-        requestTimestamp,
-        acceptTimestamp,
-        rating,
-        createAt,
-        patient,
-        agentFeedback
-    } = data
+    const { description, category, requestTimestamp, patient, createAt } = data
 
     const id = uuid()
 
     db.run(
-        `INSERT INTO ISCServiceView (id, allocatedAgent, description, requestTimestamp, acceptTimestamp, allocatedAgent, patient, rating, createAt, agentFeedback) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO ISCServiceView (id, allocatedAgent, description, category, patient, requestTimestamp, acceptTimestamp, rating, createAt, agentFeedback) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
             id,
-            allocatedAgent,
+            null, // allocatedAgent is null initially
             description,
-            requestTimestamp,
-            acceptTimestamp,
+            category, // Added category
             patient,
-            rating,
+            requestTimestamp,
+            null, // acceptTimestamp is null initially
+            null, // rating is null initially
             createAt,
-            agentFeedback
+            null // agentFeedback is null initially
         ],
         callback
     )
@@ -47,13 +39,13 @@ export const insertService = (
 export const acceptService = (
     db: sqlite3.Database,
     id: string,
-    socketId: string,
+    agentId: string,
     callback: (err: Error | null, row?: any) => void
 ) => {
     const acceptTimestamp = new Date().toISOString()
     db.run(
         'UPDATE ISCServiceView SET acceptTimestamp = ?, allocatedAgent = ? WHERE id = ?',
-        [acceptTimestamp, socketId, id],
+        [acceptTimestamp, agentId, id],
         callback
     )
 }
@@ -65,7 +57,7 @@ export const allocateServiceToAgent = (
     callback: (err: Error | null) => void
 ) => {
     db.run(
-        'UPDATE ISCServiceView SET alocatedAgent = ? WHERE id = ?',
+        'UPDATE ISCServiceView SET allocatedAgent = ? WHERE id = ?',
         [agentId, serviceId],
         callback
     )

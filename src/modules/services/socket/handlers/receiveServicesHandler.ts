@@ -7,12 +7,16 @@ export const receiveServiceHandler = (socket: Socket, data: any) => {
     const serviceData = {
         patient: data.patient,
         description: data.description,
-        requestTimestamp: new Date(),
-        createAt: new Date()
+        category: data.category,
+        requestTimestamp: new Date().toISOString(),
+        createAt: new Date().toISOString()
     }
+
     dbQueries.insertService(db, serviceData, (err) => {
         if (err) {
-            throw err
+            console.error('Error inserting new service:', err)
+            socket.emit('error_inserting_service', { error: err.message })
+            return
         }
         socket.broadcast.emit('new_service', data)
     })

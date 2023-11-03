@@ -5,7 +5,9 @@ import * as dbQueries from '../../../../shared/db/queries'
 export const getAllServicesHandler = (socket: Socket) => {
     dbQueries.getAllServices(db, (err, rows) => {
         if (err) {
-            throw err
+            console.error('Error fetching all services:', err)
+            socket.emit('error_fetching_services', { error: err.message })
+            return
         }
         socket.emit('services_list', rows)
     })
