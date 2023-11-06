@@ -9,6 +9,7 @@ export const getAllServicesHandler = (socket: Socket) => {
             socket.emit('error_fetching_services', { error: err.message })
             return
         }
+        console.log(rows)
         socket.emit('services_list', rows)
     })
 }

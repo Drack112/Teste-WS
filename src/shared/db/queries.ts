@@ -12,11 +12,11 @@ export const getAllServices = (
 export const insertService = (
     db: sqlite3.Database,
     data: Partial<SCService>,
-    callback: (err: Error | null) => void
+    callback: (err: Error | null) => void // Modify the callback signature to include the id
 ) => {
     const { description, category, requestTimestamp, patient, createAt } = data
 
-    const id = uuid()
+    const id = uuid() // Generate a UUID for the new service id.
 
     db.run(
         `INSERT INTO ISCServiceView (id, allocatedAgent, description, category, patient, requestTimestamp, acceptTimestamp, rating, createAt, agentFeedback) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -24,15 +24,17 @@ export const insertService = (
             id,
             null, // allocatedAgent is null initially
             description,
-            category, // Added category
+            category, // Assuming 'category' is a string or null.
             patient,
-            requestTimestamp,
+            requestTimestamp ? new Date(requestTimestamp).toISOString() : null, // Convert to ISO string if not null.
             null, // acceptTimestamp is null initially
             null, // rating is null initially
-            createAt,
+            createAt ? new Date(createAt).toISOString() : null, // Convert to ISO string if not null.
             null // agentFeedback is null initially
         ],
-        callback
+        function (err) {
+            callback(err) // Pass the id to the callback.
+        }
     )
 }
 
